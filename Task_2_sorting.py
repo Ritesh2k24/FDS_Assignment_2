@@ -1,26 +1,38 @@
-#Reducer
+#mapper
 
 #!/usr/bin/env python3
 import sys
-from collections import defaultdict
-
-current_user = None
-action_counts = defaultdict(int)
-
-def output(user, counts):
-    sorted_actions = sorted(counts.items(), key=lambda x: (-x[1], x[0]))
-    print(f"{user}\t{dict(sorted_actions)}")
 
 for line in sys.stdin:
-    user_id, action_type, count = line.strip().split("\t")
-    count = int(count)
+    fields = line.strip().split("\t")
 
-    if current_user and user_id != current_user:
-        output(current_user, action_counts)
-        action_counts = defaultdict(int)
+    if len(fields) != 5:
+        continue  # Skip malformed lines
 
-    current_user = user_id
-    action_counts[action_type] += count
+    user_id = fields[1]      # because original file has: timestamp, user_id, action, content_id, metadata
+    action_type = fields[2].lower()
 
-if current_user:
-    output(current_user, action_counts)
+    if action_type in ["post", "like", "comment", "share"]:
+        print(f"{user_id}\t{action_type}")
+
+
+mapper_code = """#!/usr/bin/env python3
+import sys
+
+for line in sys.stdin:
+    fields = line.strip().split("\\t")
+
+    if len(fields) != 5:
+        continue  # Skip malformed lines
+
+    user_id = fields[1]  # timestamp, user_id, action_type, content_id, metadata
+    action_type = fields[2].lower()
+
+    if action_type in ["post", "like", "comment", "share"]:
+        print(f"{user_id}\\t{action_type}")
+"""
+
+with open("mapper_task2.py", "w") as f:
+    f.write(mapper_code)
+
+!chmod +x mapper_task2.py
